@@ -88,12 +88,14 @@ public class Tree<T> {
     }
     return successors;
   }
+  
   /*************************/
   //My code
   public Tree<T> getLatestChild()
   {
 	  return leafs.get(leafs.size()-1);
   }
+  /*************************/
 
   public Collection<Tree<T>> getSubTrees() {
     return leafs;
