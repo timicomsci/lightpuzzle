@@ -1,46 +1,24 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Stack;
 
 
 public class Solver {
 	
-	Tree<Puzzle> _head;
+	Tree<Puzzle> _head, _end;
 	
-	public Solver()
+	
+	public Solver(Puzzle p)
 	{
-		Puzzle seed = new Puzzle(3,3);
-		seed._grid[0][0] = true;
-		seed._grid[0][1] = false;
-		seed._grid[0][2] = false;
-		
-		seed._grid[1][0] = false;
-		seed._grid[1][1] = true;
-		seed._grid[1][2] = false;
-		
-		seed._grid[2][0] = false;
-		seed._grid[2][1] = false;
-		seed._grid[2][2] = true;
-		
-		_head = new Tree<Puzzle>(seed);
+		_head = new Tree<Puzzle>(p);
 	}
 	
-	public Tree<Puzzle> GetSolutionNode()
+	private Tree<Puzzle> GetSolutionNode()
 	{
-		for(int y= 0; y < 3; y++)
-		{
-			for(int x = 0; x < 3; x++)
-			{
-				Puzzle newLeaf = new Puzzle(_head.getHead().PlayCoord(x, y));
-				_head.addLeaf(newLeaf);
-				if(newLeaf.IsPuzzleDone())
-				{
-					System.out.println("Finished Puzzle");
-					return _head.getLatestChild();
-				}	
-			}
-		}
-		ArrayList<Tree<Puzzle>> curSubs = (ArrayList<Tree<Puzzle>>) _head.getSubTrees();
-		
+		ArrayList<Long> puzzlesThatHaveBeenLookedAt = new ArrayList<Long>();
+		ArrayList<Tree<Puzzle>> curSubs = new ArrayList<Tree<Puzzle>>();
+		curSubs.add(_head);
+
 		while(true)
 		{
 			ArrayList<Tree<Puzzle>> agregateNewSubs = new ArrayList<Tree<Puzzle>>();
@@ -50,30 +28,52 @@ public class Solver {
 				{
 					for(int x = 0; x < 3; x++)
 					{
+						
 						Puzzle newLeaf = new Puzzle(curSubs.get(i).getHead().PlayCoord(x, y));
-						curSubs.get(i).addLeaf(newLeaf);
-						if(newLeaf.IsPuzzleDone())
+						if(Collections.binarySearch(puzzlesThatHaveBeenLookedAt, newLeaf.GetPuzzleSum()) < 0)
 						{
-							System.out.println("Finished Puzzle");
-							return curSubs.get(i).getLatestChild();
-						}	
+							newLeaf.SetCommand(x, y);
+							curSubs.get(i).addLeaf(newLeaf);
+							puzzlesThatHaveBeenLookedAt.add(newLeaf.GetPuzzleSum());
+							Collections.sort(puzzlesThatHaveBeenLookedAt);
+							
+							if(newLeaf.IsPuzzleDone())
+							{
+								System.out.println("Finished Puzzle");
+								return curSubs.get(i).getLatestChild();
+							}	
+						}
 					}
 				}
 				agregateNewSubs.addAll(curSubs.get(i).getSubTrees());
 			}
+			curSubs.clear();
+			curSubs.addAll(agregateNewSubs);
 		}
 	}
 	
-	public void PrintSolution()
+	public Stack<Puzzle> SolveAndGetSolutionTree()
 	{
-		Tree<Puzzle> end = GetSolutionNode();
+		_end = GetSolutionNode();
 		
 		Stack<Puzzle> finalSolution = new Stack<Puzzle>();
-		finalSolution.add(end.getHead());
-		while(end.getParent() != null)
+		finalSolution.add(_end.getHead());
+		while(_end.getParent() != null)
 		{
-			end = end.getParent();
-			finalSolution.add(end.getHead());
+			_end = _end.getParent();
+			finalSolution.add(_end.getHead());
+		}
+		return finalSolution;
+	}
+	
+	public void PrintSolution()
+	{	
+		Stack<Puzzle> finalSolution = new Stack<Puzzle>();
+		finalSolution.add(_end.getHead());
+		while(_end.getParent() != null)
+		{
+			_end = _end.getParent();
+			finalSolution.add(_end.getHead());
 		}
 		while(!finalSolution.isEmpty())
 		{
