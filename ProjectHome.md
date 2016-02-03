@@ -1,0 +1,1 @@
+This program allows you to play lights out. It also will solve lights out puzzles for you.
